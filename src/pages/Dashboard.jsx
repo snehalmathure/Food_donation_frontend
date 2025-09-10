@@ -15,7 +15,7 @@ export default function Dashboard({ user }) {
           🍲 Create Donation
         </Link>
         <Link to="/addLocation" className="card card--secondary">
-          📍 Add Location
+          📍 Add Beggar's Location
         </Link>
         <Link to="/recipient-page" className="card card--tertiary">
           🗺️ View Donations / Recipients
