@@ -82,3 +82,29 @@
 .btn--primary:hover {
   background: #ea580c;
 }
+
+
+.suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  max-height: 160px;
+  overflow-y: auto;
+  z-index: 1000;
+  position: absolute; /* so it floats below input */
+  width: 100%;
+}
+
+.suggestions li {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.suggestions li:hover {
+  background: #f0f4ff;
+}
+
