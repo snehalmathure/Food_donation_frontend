@@ -23,11 +23,18 @@ export default function Login() {
       );
 
       // Save token & user in localStorage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      // localStorage.setItem("token", response.data.token);
+      // localStorage.setItem("user", JSON.stringify(response.data.user));
+
+      const { token, user } = response.data;
+
+      // ✅ Save in sessionStorage
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("userId", user.id);
+      sessionStorage.setItem("userName", user.name);
 
       // Redirect to dashboard
-      navigate("/dashboard");
+      navigate("/donation");
     } catch (err) {
       console.error("Login error:", err);
       setError(

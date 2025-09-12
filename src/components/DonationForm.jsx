@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { OpenStreetMapProvider } from "leaflet-geosearch";
 import "../style/DonationForm.css";
 
 export default function DonationForm() {
   const [foodType, setFoodType] = useState("");
   const [quantity, setQuantity] = useState("");
   const [location, setLocation] = useState("Fetching current location...");
-  const [notes, setNotes] = useState("");
   const [coords, setCoords] = useState(null);
+  const [notes, setNotes] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
 
-  // Get user location when component loads
+  const provider = new OpenStreetMapProvider();
+
+  // ✅ Get current location once when component mounts
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -17,21 +21,18 @@ export default function DonationForm() {
           setCoords({ latitude, longitude });
 
           try {
-            // Reverse geocoding request (OpenStreetMap)
+            // Reverse geocode (convert coords → address)
             const res = await fetch(
               `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
               {
                 headers: {
-                  "User-Agent": "food-donation-app", // required by Nominatim
+                  "User-Agent": "food-donation-app",
                   "Accept-Language": "en",
                 },
               }
             );
 
-            if (!res.ok) throw new Error("Failed to fetch address");
-
             const data = await res.json();
-
             if (data.display_name) {
               setLocation(data.display_name);
             } else {
@@ -47,23 +48,34 @@ export default function DonationForm() {
           setLocation(""); // let user enter manually
         }
       );
-    } else {
-      alert("Geolocation is not supported by your browser.");
-      setLocation("");
     }
   }, []);
 
-  // Handle submit
+  // ✅ Handle typing in search box
+  const handleSearch = async (value) => {
+    setLocation(value);
+
+    if (value.length > 3) {
+      const results = await provider.search({ query: value });
+      setSuggestions(results);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  // ✅ When user selects a suggestion
+  const handleSelect = (place) => {
+    setLocation(place.label);
+    setCoords({ latitude: place.y, longitude: place.x });
+    setSuggestions([]);
+  };
+
+  // ✅ Submit
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const donationData = { foodType, quantity, location, notes, coords };
     console.log("Donation Submitted:", donationData);
-
-    // TODO: Send donationData to backend API
     alert("🎉 Thank you for your donation!");
-
-    // Reset form
     setFoodType("");
     setQuantity("");
     setLocation("");
@@ -80,6 +92,7 @@ export default function DonationForm() {
         </p>
 
         <form onSubmit={handleSubmit} className="donation__form">
+          {/* Food Type */}
           <div className="form__group">
             <label htmlFor="foodType">Food Type</label>
             <input
@@ -92,6 +105,7 @@ export default function DonationForm() {
             />
           </div>
 
+          {/* Quantity */}
           <div className="form__group">
             <label htmlFor="quantity">Quantity (plates/servings)</label>
             <input
@@ -104,6 +118,7 @@ export default function DonationForm() {
             />
           </div>
 
+          {/* Location with current + search */}
           <div className="form__group">
             <label htmlFor="location">Location</label>
             <input
@@ -111,9 +126,21 @@ export default function DonationForm() {
               type="text"
               placeholder="Fetching current location..."
               value={location}
-              onChange={(e) => setLocation(e.target.value)} // user can still edit manually
+              onChange={(e) => handleSearch(e.target.value)}
               required
             />
+
+            {/* Suggestions dropdown */}
+            {suggestions.length > 0 && (
+              <ul className="suggestions">
+                {suggestions.map((s, i) => (
+                  <li key={i} onClick={() => handleSelect(s)}>
+                    {s.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+
             {coords && (
               <small className="coords">
                 📍 Lat: {coords.latitude.toFixed(6)}, Lng:{" "}
@@ -122,6 +149,7 @@ export default function DonationForm() {
             )}
           </div>
 
+          {/* Notes */}
           <div className="form__group">
             <label htmlFor="notes">Additional Notes (optional)</label>
             <textarea
