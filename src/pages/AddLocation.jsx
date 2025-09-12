@@ -85,31 +85,35 @@ export default function AddLocation() {
   }, []);
 
   // Submit form to backend
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!coords) return alert("Select a location first!");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!coords) return alert("Select a location first!");
 
-    const locationData = {
-      latitude: coords.lat,
-      longitude: coords.lng,
-      beggarCount,
-      comment,
-    };
-
-    try {
-      const res = await fetch("http://localhost:5000/api/locations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(locationData),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-      alert("✅ Location saved!");
-      setBeggarCount("");
-      setComment("");
-    } catch (err) {
-      alert("❌ Error: " + err.message);
-    }
+  const locationData = {
+    numberOfBeggars: beggarCount,    
+    description: comment,            
+    location: {
+      latitude: coords.lat,          
+      longitude: coords.lng,         
+    },
   };
+
+  try {
+    const res = await fetch("http://localhost:4000/api/beggars", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(locationData),
+    });
+
+    if (!res.ok) throw new Error("Failed to save");
+    alert("✅ Location saved!");
+    setBeggarCount("");
+    setComment("");
+  } catch (err) {
+    alert("❌ Error: " + err.message);
+  }
+};
+
 
   return (
     <div className="container">
@@ -151,7 +155,7 @@ export default function AddLocation() {
 
       <form onSubmit={handleSubmit} className="form">
         <div>
-          <label className="label">Number of Beggars/Dogs</label>
+          <label className="label">Number of Beggars</label>
           <input
             type="number"
             value={beggarCount}
@@ -161,7 +165,7 @@ export default function AddLocation() {
           />
         </div>
         <div>
-          <label className="label">Comments (Optional)</label>
+          <label className="label">Description</label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
